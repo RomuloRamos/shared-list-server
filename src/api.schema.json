@@ -1,0 +1,873 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Shared Lists API",
+    "description": "An app for users to share their lists and collaborate with each other",
+    "contact": {
+      "name": "Rômulo Franklin",
+      "email": "romulo.ramos@gee.inatel.br"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api/v0/",
+      "description": "Local Host Server to Shared List Application"
+    }
+  ],
+  "tags": [
+    {
+      "name": "authenticate",
+      "description": "A simple authentication management"
+    },
+    {
+      "name": "users",
+      "description": "User management related requests"
+    },
+    {
+      "name": "lists",
+      "description": "Lists management requests"
+    },
+    {
+      "name": "items",
+      "description": "Items management requests"
+    }
+  ],
+  "paths": {
+    "/authenticate": {
+      "post": {
+        "tags": [
+          "authenticate"
+        ],
+        "summary": "Logs in a user into the system",
+        "description": "From a given user and password combination, logs in a user and gives a token back to authenticate a user session.",
+        "requestBody": {
+          "description": "An object containing the username and the password encoded.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCredentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationToken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid username/password supplied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authenticate/sso": {
+      "post": {
+        "tags": [
+          "authenticate"
+        ],
+        "summary": "Make the authentication to a app",
+        "description": "From a given app_token (previously obtained) and a login combination, the server validates the authentication and gives a token back and the user info object.",
+        "requestBody": {
+          "description": "An object containing the app_token and the login.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserAppCredentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationToken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid sso credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_401"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Create a new user",
+        "description": "A new user is created. The user details are retrieved in the body of the petition.",
+        "requestBody": {
+          "description": "User object that needs to be added to the database.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Succesful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get a user",
+        "description": "Ask for a user with an especified id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The user id number valid from server.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Query"
+          },
+          "401": {
+            "description": "Not authorized"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update user details",
+        "description": "The user updates its information. This can only be done by the logged user.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The user id number valid from server.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated user object. Only the fields to be updated.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The user has no permissions, make sure it's your account."
+          },
+          "404": {
+            "description": "User not found."
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/lists": {
+      "post": {
+        "tags": [
+          "lists"
+        ],
+        "summary": "Create new list",
+        "description": "Creates a new list for the current user.",
+        "requestBody": {
+          "description": "The list to be created.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/List"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK, list created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFull"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid insertion"
+          }
+        }
+      }
+    },
+    "/lists/{id}": {
+      "get": {
+        "tags": [
+          "lists"
+        ],
+        "summary": "Get the available lists",
+        "description": "Returns the lists related to the id passed as parameter.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The list id number that wants to search.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The list found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lists"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "lists"
+        ],
+        "summary": "Deletes the list by id",
+        "description": "Deletes the list by its id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the list to be deleted.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid delete attempt"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/lists/{listId}/items": {
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Get all items from a specific list id",
+        "description": "Get all items from a specific list.",
+        "parameters": [
+          {
+            "name": "listId",
+            "in": "path",
+            "description": "The id of the list containing the item.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListItems"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Query"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Create an items related to the specific list id",
+        "description": "Create an items related to the specific list id",
+        "parameters": [
+          {
+            "name": "listId",
+            "in": "path",
+            "description": "The id of the list containing the item.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The params of the item to be updated.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListItemUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemFull"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Query"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/lists/{listId}/items/{itemId}": {
+      "put": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Updates an item by its id",
+        "description": "Updates an item from a specific list.",
+        "parameters": [
+          {
+            "name": "listId",
+            "in": "path",
+            "description": "The id of the list containing the item.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "description": "Id of the item to be updated.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The params of the item to be updated.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListItemUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemFull"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Update insertion"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Deletes an item by its id",
+        "description": "Deletes an item from a list by its id.",
+        "parameters": [
+          {
+            "name": "listId",
+            "in": "path",
+            "description": "The id of the list containing the item.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "description": "Id of the item to be deleted.",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid delete attempt"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Lists": {
+        "type": "object",
+        "properties": {
+          "lists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Lists_lists"
+            }
+          },
+          "retrieved": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "List": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "My List"
+          },
+          "authorId": {
+            "type": "number",
+            "example": 1
+          }
+        }
+      },
+      "ListFull": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "$ref": "#/components/schemas/ListFull_list"
+          }
+        }
+      },
+      "ListItems": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemFull"
+            }
+          }
+        }
+      },
+      "GetOneList": {
+        "type": "object",
+        "properties": {
+          "list": {
+            "$ref": "#/components/schemas/GetOneList_list"
+          },
+          "user_id": {
+            "type": "number",
+            "example": 1
+          }
+        }
+      },
+      "ListItemUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Item name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Item Description"
+          },
+          "user_id": {
+            "type": "number",
+            "example": 1
+          }
+        }
+      },
+      "ItemFull": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Item name"
+          },
+          "description": {
+            "type": "string",
+            "example": "Item Description"
+          },
+          "ownerId": {
+            "type": "number",
+            "example": 1
+          },
+          "listId": {
+            "type": "number",
+            "example": 1
+          },
+          "parentId": {
+            "type": "number",
+            "example": 1
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "MyUser"
+          },
+          "email": {
+            "type": "string",
+            "example": "example@example.com"
+          },
+          "login": {
+            "type": "string",
+            "example": "Login"
+          },
+          "password": {
+            "type": "string",
+            "example": "EncodedPassword"
+          }
+        }
+      },
+      "UserList": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Username"
+            }
+          },
+          "retrieved": {
+            "type": "integer",
+            "example": 10
+          }
+        }
+      },
+      "ContactList": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Contact"
+            }
+          },
+          "retrieved": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "AuthenticationToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "someTokenForAnAuthenticatedUser"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "UserCredentials": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "example": "admin@admin.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "admin"
+          }
+        }
+      },
+      "UserAppCredentials": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "example": "admin@admin.com"
+          },
+          "app_token": {
+            "type": "string",
+            "example": "admin"
+          }
+        }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "Username"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "friend",
+              "sent",
+              "pending",
+              "blocked"
+            ]
+          }
+        }
+      },
+      "inline_response_401": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "The given credentials ar not valid."
+          }
+        }
+      },
+      "contacts_contact_body": {
+        "type": "object",
+        "properties": {
+          "new_status": {
+            "type": "string",
+            "enum": [
+              "friend"
+            ]
+          }
+        }
+      },
+      "Lists_lists": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "Id1"
+          },
+          "name": {
+            "type": "string",
+            "example": "List1 name"
+          },
+          "owner": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "inline_response_200": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "ListFull_list": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "My List"
+          },
+          "authorId": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "example": null
+      },
+      "GetOneList_list": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "My List"
+          }
+        },
+        "example": null
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

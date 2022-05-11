@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//*****Models******//
+
+//User Model. Describes all atributes related to an user.
+model User{
+  id                Int @default(autoincrement()) @id         //Table user Id
+  name              String                                    //The name of the user
+  email             String? @unique                            //The email of the user
+  listsAuthor       ListsModel[] @relation("ListAuthor")      //Array of lists ids that its user is an author
+  listsMember       UserMemberList[] @relation("UserMember")  //Array of lists ids that its user is a member
+  itemsOwner        Items[] @relation("ItemsOwner")
+  login             String @unique
+  password          String
+}
+
+model UserMemberList {
+  id              Int @default(autoincrement()) @id
+  userId          Int
+  userMember      User @relation("UserMember", fields: [userId], references:[id])
+  listId          Int
+  listMember      ListsModel @relation("ListMembers", fields: [listId], references:[id])
+}
+
+model ListsModel{
+  id              Int @default(autoincrement()) @id
+  title           String
+  authorId        Int
+  author          User @relation("ListAuthor", fields: [authorId], references:[id])
+  usersMembers    UserMemberList[] @relation("ListMembers")
+  items           Items[]
+}
+
+model Items{
+  id              Int @default(autoincrement()) @id
+  title           String?
+  description     String?
+  ownerId         Int
+  owner           User @relation("ItemsOwner", fields: [ownerId], references:[id])
+  listId          Int?
+  list            ListsModel? @relation(fields: [listId], references:[id])
+  parentId        Int?
+}

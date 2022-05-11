@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: SharedListDB
+    restart: always
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PSW}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  ts-node-docker: 
+    build:
+      context: .
+      dockerfile: dockerfile
+      target: base
+    volumes:
+      - ./src:/home/node/app/src
+      - /usr/src/app/node_modules # anonymous volume for node_modules only
+    container_name: ts-node-docker
+    expose:
+      - '4000'
+    ports:
+     - '4000:4000'
+    depends_on:
+      - "postgres"
+    command: bash -c "npx prisma migrate deploy && npx prisma db seed && npm run start:local"
